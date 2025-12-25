@@ -64,7 +64,73 @@ async function processIdsInPage(ids) {
       if (captchaDiv) captchaDiv.style.backgroundColor = "white";
       await new Promise(res => setTimeout(res, 200)); // Short delay to make the highlight visible
 
-      const captchaInput = prompt(`Enter 6-digit CAPTCHA for ID: ${id}`);
+      // --- Custom Captcha Prompt ---
+      const getCaptchaFromUser = (id) => {
+        return new Promise((resolve) => {
+          // Create Modal Overlay
+          const overlay = document.createElement('div');
+          overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 99999;
+            display: flex; justify-content: center; align-items: flex-start; padding-top: 50px;
+          `;
+
+          // Create Modal Content
+          const modal = document.createElement('div');
+          modal.style.cssText = `
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-align: center; width: 300px;
+            font-family: -apple-system, sans-serif;
+          `;
+
+          modal.innerHTML = `
+            <h3 style="margin: 0 0 15px; color: #333;">Enter CAPTCHA</h3>
+            <p style="margin: 0 0 15px; color: #666; font-size: 14px;">For ID: <strong>${id}</strong></p>
+            <input type="number" id="custom-captcha-input" placeholder="6-digit code" 
+              style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center;">
+            <div style="display: flex; gap: 10px;">
+              <button id="custom-captcha-cancel" style="flex: 1; padding: 10px; border: none; background: #f1f1f1; color: #333; border-radius: 6px; cursor: pointer;">Cancel</button>
+              <button id="custom-captcha-submit" style="flex: 1; padding: 10px; border: none; background: #007bff; color: white; border-radius: 6px; cursor: pointer;">Submit</button>
+            </div>
+          `;
+
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+
+          const input = modal.querySelector('#custom-captcha-input');
+          const submitBtn = modal.querySelector('#custom-captcha-submit');
+          const cancelBtn = modal.querySelector('#custom-captcha-cancel');
+
+          input.focus();
+
+          const cleanup = () => {
+            document.body.removeChild(overlay);
+          };
+
+          const submit = () => {
+            const val = input.value.trim();
+            cleanup();
+            resolve(val);
+          };
+
+          const cancel = () => {
+            cleanup();
+            resolve(null);
+          };
+
+          submitBtn.onclick = submit;
+          cancelBtn.onclick = cancel;
+
+          // Handle Enter key
+          input.onkeydown = (e) => {
+            if (e.key === 'Enter') submit();
+          };
+        });
+      };
+
+      const captchaInput = await getCaptchaFromUser(id);
+
       if (captchaInput === null) {
         alert("Process cancelled by user.");
         return; // End the entire script
