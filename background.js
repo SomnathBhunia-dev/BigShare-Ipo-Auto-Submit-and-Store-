@@ -84,8 +84,21 @@ async function processIdsInPage(ids) {
             font-family: -apple-system, sans-serif;
           `;
 
+          // Get Captcha Image
+          const captchaCanvas = document.getElementById('captcha');
+          let captchaImgHtml = '';
+          if (captchaCanvas) {
+            try {
+              const dataUrl = captchaCanvas.toDataURL();
+              captchaImgHtml = `<img src="${dataUrl}" style="display: block; margin: 0 auto 15px; border: 1px solid #ccc; border-radius: 4px; max-width: 100%;">`;
+            } catch (e) {
+              console.error("Could not capture captcha canvas", e);
+            }
+          }
+
           modal.innerHTML = `
             <h3 style="margin: 0 0 15px; color: #333;">Enter CAPTCHA</h3>
+            ${captchaImgHtml}
             <p style="margin: 0 0 15px; color: #666; font-size: 14px;">For ID: <strong>${id}</strong></p>
             <input type="number" id="custom-captcha-input" placeholder="6-digit code" 
               style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center;">
